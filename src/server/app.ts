@@ -36,7 +36,7 @@ export async function buildApp(env: Env) {
 
   if (env.NODE_ENV === "production") {
     const currentDir = dirname(fileURLToPath(import.meta.url));
-    const clientDir = join(currentDir, "../../client");
+    const clientDir = join(currentDir, "../client");
     await app.register(fastifyStatic, { root: clientDir });
     app.setNotFoundHandler((request, reply) => request.url.startsWith("/api/") ? reply.code(404).send({ error: "Not found" }) : reply.sendFile("index.html"));
   }
