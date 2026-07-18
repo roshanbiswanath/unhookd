@@ -37,6 +37,7 @@ export function LivePage() {
   const liveRef = useRef<any>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const nextAudioTime = useRef(0);
+  const receivedCoachResponse = useRef(false);
 
   const create = useMutation({
     mutationFn: () => apiFetch<SessionResponse>(getToken, "/api/live-sessions", { method: "POST", body: JSON.stringify({ windowId: params.get("windowId") || undefined, pullBefore }) }),
@@ -56,7 +57,7 @@ export function LivePage() {
   };
 
   const enableAudio = () => {
-    const context = audioRef.current ?? new AudioContext({ sampleRate: 24000 });
+    const context = audioRef.current ?? new AudioContext();
     audioRef.current = context;
     if (context.state === "suspended") void context.resume();
   };
@@ -109,6 +110,7 @@ export function LivePage() {
             setCaption(`I’m here. Start ${activity.title.toLowerCase()} when you’re ready.`);
           },
           onmessage: async (message) => {
+            receivedCoachResponse.current = true;
             const text = message.serverContent?.outputTranscription?.text
               || message.serverContent?.modelTurn?.parts?.map((part) => part.text).find(Boolean)
               || message.text;
@@ -127,12 +129,25 @@ export function LivePage() {
               live.sendToolResponse({ functionResponses: { id: call.id, name: call.name, response: { output: { observed: result.observed, complete: result.complete } } } });
             }
           },
-          onerror: () => { setLiveStatus("manual"); setCameraError("Live Coach disconnected. Manual completion is still available."); },
+          onerror: (event) => {
+            setLiveStatus("manual");
+            setCameraError(`Live Coach could not connect${event.message ? `: ${event.message}` : ""}. Manual completion is still available.`);
+          },
           onclose: () => { if (liveStatus === "live") setLiveStatus("manual"); },
         },
       });
       liveRef.current = live;
+      receivedCoachResponse.current = false;
       live.sendClientContent({ turns: [{ role: "user", parts: [{ text: `Start coaching the user through ${activity.title}. Give one brief spoken and transcribed start cue, then observe only what the camera can show.` }] }], turnComplete: true });
+      window.setTimeout(() => {
+        if (receivedCoachResponse.current || liveRef.current !== live) return;
+        live.sendClientContent({ turns: [{ role: "user", parts: [{ text: "Please give the user a short coaching cue now." }] }], turnComplete: true });
+      }, 4_000);
+      window.setTimeout(() => {
+        if (receivedCoachResponse.current || liveRef.current !== live) return;
+        setLiveStatus("manual");
+        setCameraError("Live Coach connected but did not return a response. Manual completion is available.");
+      }, 10_000);
       const canvas = document.createElement("canvas");
       canvas.width = 512;
       canvas.height = 512;
