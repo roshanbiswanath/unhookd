@@ -1,0 +1,10 @@
+{
+  "name": "Unhookd",
+  "short_name": "Unhookd",
+  "description": "Turn digital urges into short, real-world actions.",
+  "start_url": "/today",
+  "display": "standalone",
+  "background_color": "#f7f6f3",
+  "theme_color": "#f7f6f3",
+  "icons": []
+}

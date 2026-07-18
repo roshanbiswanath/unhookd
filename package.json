@@ -1,0 +1,54 @@
+{
+  "name": "unhookd",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web -c green,cyan \"tsx watch src/server/index.ts\" \"vite\"",
+    "build": "vite build && tsc -p tsconfig.server.json",
+    "start": "node dist/server/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@clerk/backend": "^2.0.0",
+    "@clerk/clerk-react": "^5.0.0",
+    "@fastify/helmet": "^13.0.0",
+    "@fastify/multipart": "^9.0.0",
+    "@fastify/rate-limit": "^10.0.0",
+    "@fastify/static": "^8.0.0",
+    "@fontsource-variable/geist": "^5.2.0",
+    "@google/genai": "^1.0.0",
+    "@tanstack/react-query": "^5.0.0",
+    "dotenv": "^16.6.1",
+    "fastify": "^5.0.0",
+    "lucide-react": "^0.468.0",
+    "mongodb": "^6.21.0",
+    "openai": "^5.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "sharp": "^0.34.0",
+    "web-push": "^3.6.7",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.0.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/web-push": "^3.6.4",
+    "@vitejs/plugin-react": "^4.4.0",
+    "concurrently": "^9.0.0",
+    "jsdom": "^26.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}
