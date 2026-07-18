@@ -54,11 +54,10 @@ export class OpenAIService {
         type: "input_text",
         text: "Extract only visible digital-usage evidence from these screenshots. Never infer data that is not visible. Return app names, visible durations, opens, dates, and hourly peak windows. Use a confidence from 0 to 1 and source image indexes.",
       },
-      ...images.map((image, index) => ({
+      ...images.map((image) => ({
         type: "input_image" as const,
         image_url: `data:image/jpeg;base64,${image.toString("base64")}`,
         detail: "high" as const,
-        index,
       })),
     ];
     const response = await this.client.responses.create({
