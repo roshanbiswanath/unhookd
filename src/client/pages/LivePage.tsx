@@ -55,12 +55,18 @@ export function LivePage() {
     return result;
   };
 
+  const enableAudio = () => {
+    const context = audioRef.current ?? new AudioContext({ sampleRate: 24000 });
+    audioRef.current = context;
+    if (context.state === "suspended") void context.resume();
+  };
+
   const playAudio = (base64: string) => {
     try {
       const bytes = Uint8Array.from(atob(base64), (item) => item.charCodeAt(0));
       const samples = new Int16Array(bytes.buffer);
-      const context = audioRef.current ?? new AudioContext({ sampleRate: 24000 });
-      audioRef.current = context;
+      enableAudio();
+      const context = audioRef.current!;
       const buffer = context.createBuffer(1, samples.length, 24000);
       const channel = buffer.getChannelData(0);
       samples.forEach((sample, index) => { channel[index] = sample / 32768; });
@@ -101,10 +107,11 @@ export function LivePage() {
           onopen: () => {
             setLiveStatus("live");
             setCaption(`I’m here. Start ${activity.title.toLowerCase()} when you’re ready.`);
-            live.sendClientContent({ turns: [{ role: "user", parts: [{ text: `Start coaching the user through ${activity.title}. Be concise. Observe only what the camera can show.` }] }], turnComplete: true });
           },
           onmessage: async (message) => {
-            const text = message.serverContent?.outputTranscription?.text || message.text;
+            const text = message.serverContent?.outputTranscription?.text
+              || message.serverContent?.modelTurn?.parts?.map((part) => part.text).find(Boolean)
+              || message.text;
             if (text) setCaption(text);
             const audio = message.serverContent?.modelTurn?.parts?.find((part) => part.inlineData?.mimeType?.startsWith("audio/pcm"))?.inlineData?.data;
             if (audio) playAudio(audio);
@@ -125,6 +132,7 @@ export function LivePage() {
         },
       });
       liveRef.current = live;
+      live.sendClientContent({ turns: [{ role: "user", parts: [{ text: `Start coaching the user through ${activity.title}. Give one brief spoken and transcribed start cue, then observe only what the camera can show.` }] }], turnComplete: true });
       const canvas = document.createElement("canvas");
       canvas.width = 512;
       canvas.height = 512;
@@ -159,7 +167,7 @@ export function LivePage() {
   useEffect(() => () => stopLive(), []);
 
   if (finished) return <div className="completion-page"><span className="completion-mark"><Check size={30} /></span><span className="eyebrow">Unhook complete</span><h1>You made a different choice.</h1><p>Your outcome is now part of what Unhookd learns from.</p><button className="primary-button" onClick={() => navigate("/progress")}>See progress <ChevronRight size={18} /></button></div>;
-  if (!session) return <div className="live-setup"><button className="close-live" onClick={() => navigate("/today")} aria-label="Close"><X size={20} /></button><div className="live-setup-copy"><span className="eyebrow">Get unhookd</span><h1>Take one minute for something real.</h1><p>Rate the pull, then Unhookd will choose an activity from the alternatives you approved.</p><div className="rating-control"><div><strong>{pullBefore}</strong><span>{ratingLabel(pullBefore)}</span></div><input aria-label="Current pull" type="range" min="0" max="5" value={pullBefore} onChange={(event) => setPullBefore(Number(event.target.value))} /><div className="range-labels"><span>None</span><span>Strong</span></div></div><button className="primary-button large" disabled={create.isPending} onClick={() => create.mutate()}>{create.isPending ? <LoaderCircle className="spin" /> : <Video size={19} />}{create.isPending ? "Preparing..." : "Choose my activity"}</button>{create.error && <p className="error-banner">{create.error.message}</p>}</div><aside className="live-privacy"><ShieldCheck size={22} /><strong>Live is optional</strong><p>Camera frames are sent directly to Gemini for this session. Unhookd does not store video.</p></aside></div>;
+  if (!session) return <div className="live-setup"><button className="close-live" onClick={() => navigate("/today")} aria-label="Close"><X size={20} /></button><div className="live-setup-copy"><span className="eyebrow">Get unhookd</span><h1>Take one minute for something real.</h1><p>Rate the pull, then Unhookd will choose an activity from the alternatives you approved.</p><div className="rating-control"><div><strong>{pullBefore}</strong><span>{ratingLabel(pullBefore)}</span></div><input aria-label="Current pull" type="range" min="0" max="5" value={pullBefore} onChange={(event) => setPullBefore(Number(event.target.value))} /><div className="range-labels"><span>None</span><span>Strong</span></div></div><button className="primary-button large" disabled={create.isPending} onClick={() => { enableAudio(); create.mutate(); }}>{create.isPending ? <LoaderCircle className="spin" /> : <Video size={19} />}{create.isPending ? "Preparing..." : "Choose my activity"}</button>{create.error && <p className="error-banner">{create.error.message}</p>}</div><aside className="live-privacy"><ShieldCheck size={22} /><strong>Live is optional</strong><p>Camera frames are sent directly to Gemini for this session. Unhookd does not store video.</p></aside></div>;
 
   const activity: ActivityContract = session.activity;
   const manualAdvance = () => persistProgress(session.id, Math.min(activity.target, session.observed + 1), activity.target, 0, "Manual user entry");
