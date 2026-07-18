@@ -27,6 +27,7 @@ V1 is intentionally focused on digital habits. It does not diagnose or treat add
 - Manual fallback for denied camera or failed Gemini Live connection.
 - Browser service worker and Web Push API surface.
 - Initial README with setup, security, challenge alignment, and demo flow.
+- Public landing page at `/` that opens Clerk only after an explicit visitor action.
 - `npm run typecheck` currently passes.
 
 ## Current Files
@@ -77,20 +78,17 @@ Provider model-list calls were attempted but were blocked by the active network 
 
 ## Current Gaps
 
-1. `src/client/styles.css` still needs to be created. `main.tsx` imports it, so Vite will not render the application until this file exists.
-2. The Fastify watch process previously failed before `.env` loading was added. Restart `npm run dev` after the styling pass, then verify `http://localhost:3001/api/health`.
-3. The scheduler currently needs correction: it should match each window against the user timezone and a minute-rounded scheduled timestamp. The current comparison is too naive and could repeatedly deliver after the start time.
-4. Ensure the MongoDB Atlas URI is reachable. Collections and indexes initialize when the server starts.
-5. Add unit tests, API integration tests, and Playwright responsive tests.
-6. Perform real OpenAI extraction and Gemini Live smoke calls with the configured model IDs.
-7. Complete build, production serving, and Heroku deployment verification.
-8. Update README implementation checklist as each item completes.
+1. Ensure the MongoDB Atlas URI is reachable. Collections and indexes initialize when the server starts.
+2. Add API integration tests and Playwright responsive tests.
+3. Perform real OpenAI extraction and Gemini Live smoke calls with the configured model IDs.
+4. Complete Heroku deployment verification after a Heroku app is created and its config vars are set.
+5. Update README implementation checklist as each item completes.
 
 ## Required Next Steps
 
-### 1. Finish visual system
+### 1. Verify visual system
 
-Create `src/client/styles.css` using the project `minimalist-ui` direction:
+The application styling and public landing page are present. Verify the live landing page at desktop and mobile sizes:
 
 - Warm off-white canvas, charcoal text, muted semantic green/blue/yellow accents.
 - Geist Sans, no negative letter spacing.
@@ -102,9 +100,9 @@ Create `src/client/styles.css` using the project `minimalist-ui` direction:
 
 Higher-priority product requirements override `minimalist-ui` conflicts: use Lucide icons, avoid huge editorial whitespace, and use dense operational layouts.
 
-### 2. Fix notification scheduling
+### 2. Verify notification scheduling
 
-Replace `startScheduler` logic with a pure `isWindowDue(window, timezone, now)` helper.
+`isWindowDue(window, timezone, now)` now exists with unit coverage. Confirm production notification delivery with real VAPID keys.
 
 - Convert `now` into each user timezone through `Intl.DateTimeFormat`.
 - Compare weekday and `HH:mm` exactly.
