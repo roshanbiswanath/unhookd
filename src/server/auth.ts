@@ -10,7 +10,7 @@ declare module "fastify" {
 
 export function registerAuth(app: { addHook: (name: "preHandler", hook: (request: FastifyRequest, reply: FastifyReply) => Promise<void>) => void }, db: Database, secretKey: string) {
   app.addHook("preHandler", async (request, reply) => {
-    if (request.url === "/api/health" || request.url.startsWith("/api/public")) return;
+    if (!request.url.startsWith("/api/") || request.url === "/api/health" || request.url.startsWith("/api/public")) return;
     const header = request.headers.authorization;
     const token = header?.startsWith("Bearer ") ? header.slice(7) : undefined;
     if (!token) {
