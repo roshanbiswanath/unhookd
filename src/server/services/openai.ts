@@ -91,10 +91,11 @@ export class OpenAIService {
     return { assistantMessage: parsed.assistantMessage, draftPatch: onboardingDraftSchema.partial().parse(parsed.draftPatch ?? {}) };
   }
 
-  async planActivity(draft: OnboardingDraft, recentOutcomes: string[]): Promise<ActivityContract> {
+  async planActivity(draft: OnboardingDraft, recentActivities: Array<{ title: string; helpfulness: string }>, pullBefore: number | null): Promise<ActivityContract> {
+    const intensity = pullBefore === null ? "unknown" : pullBefore <= 1 ? "low" : pullBefore <= 3 ? "moderate" : "high";
     const response = await this.client.responses.create({
       model: this.model,
-      input: [{ role: "user", content: [{ type: "input_text", text: `Create one safe, 30-180 second activity from this approved Unhookd profile. It must be observable by a phone camera or timer and must not require equipment. Profile: ${JSON.stringify(draft)}. Recent outcomes: ${JSON.stringify(recentOutcomes)}` }] }],
+      input: [{ role: "user", content: [{ type: "input_text", text: `Create one safe, 30-180 second activity from this approved Unhookd profile. It must be observable by a phone camera or timer and must not require equipment. The current pull intensity is ${intensity} (${pullBefore ?? "not rated"}/5). For low pull, offer a light grounding action; for moderate pull, choose a short interruption; for high pull, choose the most engaging safe approved alternative. Select from approvedActivities and avoid repeating a recent title when another approved alternative is available. Profile: ${JSON.stringify(draft)}. Recent activities and outcomes: ${JSON.stringify(recentActivities)}` }] }],
       text: { format: { type: "json_schema", name: "activity_contract", strict: true, schema: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, instructions: { type: "array", items: { type: "string" } }, metric: { type: "string", enum: ["count", "duration", "binary"] }, target: { type: "number" }, unit: { type: "string" }, observableCriteria: { type: "array", items: { type: "string" } }, maximumDurationSeconds: { type: "integer" } }, required: ["title", "instructions", "metric", "target", "unit", "observableCriteria", "maximumDurationSeconds"] } } },
       max_output_tokens: 700,
     });

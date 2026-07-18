@@ -94,8 +94,8 @@ export async function registerRoutes(app: FastifyInstance, services: RouteServic
     const body = (request.body ?? {}) as { windowId?: string; pullBefore?: number | null };
     const draft = await getDraft(db, request.userId);
     if (!draft.data.completed) return reply.code(422).send({ error: "Activate your plan first" });
-    const recent = await db.sessions.find({ userId: request.userId }, { projection: { helpfulness: 1 } }).sort({ startedAt: -1 }).limit(5).toArray();
-    const activity = await openai.planActivity(draft.data, recent.map((item) => item.helpfulness ?? "unknown"));
+    const recent = await db.sessions.find({ userId: request.userId }, { projection: { activity: 1, helpfulness: 1 } }).sort({ startedAt: -1 }).limit(5).toArray();
+    const activity = await openai.planActivity(draft.data, recent.map((item) => ({ title: item.activity.title, helpfulness: item.helpfulness ?? "unknown" })), body.pullBefore ?? null);
     const session = { id: randomUUID(), userId: request.userId, windowId: body.windowId ?? null, activity, status: "active", observed: 0, pullBefore: body.pullBefore ?? null, pullAfter: null, helpfulness: null, startedAt: new Date(), completedAt: null };
     await db.sessions.insertOne(session);
     const live = draft.data.cameraEnabled ? await gemini.createEphemeralToken(activity) : null;
