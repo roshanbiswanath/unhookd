@@ -20,7 +20,7 @@ export async function buildApp(env: Env) {
     trustProxy: true,
   });
   const { db, client } = await createDatabase(env.MONGODB_URI);
-  const openai = new OpenAIService(env.OPENAI_MODEL, env.OPENAI_API_KEY);
+  const openai = new OpenAIService(env.OPENAI_MODEL, env.OPENAI_API_KEY, env.OPENAI_BASE_URL);
   const gemini = new GeminiService(env.GEMINI_LIVE_MODEL, env.GEMINI_API_KEY);
 
   await app.register(helmet, { contentSecurityPolicy: false });

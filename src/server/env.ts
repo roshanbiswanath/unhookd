@@ -13,6 +13,7 @@ const envSchema = z.object({
   MONGODB_URI: z.string().url(),
   CLERK_SECRET_KEY: z.string().min(1),
   OPENAI_API_KEY: z.string().min(1),
+  OPENAI_BASE_URL: z.string().url().default("https://api.openai.com/v1"),
   OPENAI_MODEL: optional("gpt-5.6-terra"),
   GEMINI_API_KEY: z.string().min(1),
   GEMINI_LIVE_MODEL: optional("gemini-3.1-flash-live-preview"),

@@ -44,8 +44,8 @@ const conversationSchema = {
 
 export class OpenAIService {
   private readonly client: OpenAI;
-  constructor(private readonly model: string, apiKey: string) {
-    this.client = new OpenAI({ apiKey });
+  constructor(private readonly model: string, apiKey: string, baseURL: string) {
+    this.client = new OpenAI({ apiKey, baseURL });
   }
 
   async extractUsage(images: Buffer[]): Promise<UsageCandidate[]> {
